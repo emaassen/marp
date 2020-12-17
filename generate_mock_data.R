@@ -34,7 +34,8 @@ rel_2 <- sample(seq(0, 1, len = 8), size = n, replace = TRUE)
 rel_8 <- sample(seq(0, 1, len = 5), size = n, replace = TRUE)
 rel_9 <- sample(seq(0, 1, len = 5), size = n, replace = TRUE)
 
-rel_3 <- sample(0:1, size = n, replace = TRUE)
+rel_3 <- sample(seq(0, 1, len = 3), size = n, replace = TRUE)
+
 rel_4 <- sample(0:1, size = n, replace = TRUE)
 
 rel_scores <- data.frame(rel_1, rel_2, rel_3, rel_4, rel_5,

@@ -2,7 +2,7 @@
 # Team 041: E. Maassen & M.B. Nuijten
 
 # Clean workspace
-#rm(list=ls()) 
+rm(list=ls()) 
 
 
 ### Load packages
@@ -13,21 +13,33 @@ library(lattice) # check if still needed
 library(mlmRev) # check if still needed
 
 ### Load data
-dat <- read.csv("marpdata.csv")
-view(dat)
+dat_raw <- source("generate_mock_data.R")[[1]]
+View(dat)
 
+### Clean data
 
+# only include data when participants passed the attention check
+dat <- dat_raw[dat_raw$attention_check == 1, ]
 
 ### Factor analysis - wellbeing
+
+# center wellbeing items
 
 
 
 ### Factor analysis - religiosity
 
+# dichotomize rel_3 
+dat$rel_3[dat$rel_3 != 1] <- 0
+
+# center religiosity items
 
 
 ### Construct cultural norms variable
 
+# calculate average
+
+# center cultural norms items
 
 
 ### Specify and estimate models

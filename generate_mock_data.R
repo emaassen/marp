@@ -15,31 +15,44 @@ wb_varnames <- c(paste0("wb_gen_", 1:2),
 
 wb_scores <- matrix(NA, nrow = n, ncol = length(wb_varnames))
 
-for(i in seq_along(wb_varnames)){
-  wb_scores[ , i] <- sample(1:5, size = n, replace = TRUE)
-}
+#for(i in seq_along(wb_varnames)){
+#  wb_scores[ , i] <- sample(1:5, size = n, replace = TRUE)
+#  
+#}
+
+wb_scores <- round(faux::rnorm_multi(n = n, mu = 2.5, sd = 1, r = .25, varnames = wb_varnames),0)
 
 colnames(wb_scores) <- wb_varnames
 wb_scores <- data.frame(wb_scores)
 
 ## religiosity ----
 
-rel_1 <- sample(seq(0, 1, len = 7), size = n, replace = TRUE)
-rel_5 <- sample(seq(0, 1, len = 7), size = n, replace = TRUE)
-rel_6 <- sample(seq(0, 1, len = 7), size = n, replace = TRUE)
-rel_7 <- sample(seq(0, 1, len = 7), size = n, replace = TRUE)
+#rel_1 <- sample(seq(0, 1, len = 7), size = n, replace = TRUE)
+#rel_5 <- sample(seq(0, 1, len = 7), size = n, replace = TRUE)
+#rel_6 <- sample(seq(0, 1, len = 7), size = n, replace = TRUE)
+#rel_7 <- sample(seq(0, 1, len = 7), size = n, replace = TRUE)
+#
+#rel_2 <- sample(seq(0, 1, len = 8), size = n, replace = TRUE)
+#
+#rel_8 <- sample(seq(0, 1, len = 5), size = n, replace = TRUE)
+#rel_9 <- sample(seq(0, 1, len = 5), size = n, replace = TRUE)
+#
+#rel_3 <- sample(seq(0, 1, len = 3), size = n, replace = TRUE)
+#
+#rel_4 <- sample(0:1, size = n, replace = TRUE)
+#
+#rel_scores <- data.frame(rel_1, rel_2, rel_3, rel_4, rel_5,
+#                         rel_6, rel_7, rel_8, rel_9)
 
-rel_2 <- sample(seq(0, 1, len = 8), size = n, replace = TRUE)
 
-rel_8 <- sample(seq(0, 1, len = 5), size = n, replace = TRUE)
-rel_9 <- sample(seq(0, 1, len = 5), size = n, replace = TRUE)
+rel_varnames <- c(paste0("rel_", 1:9))
 
-rel_3 <- sample(seq(0, 1, len = 3), size = n, replace = TRUE)
-
-rel_4 <- sample(0:1, size = n, replace = TRUE)
-
-rel_scores <- data.frame(rel_1, rel_2, rel_3, rel_4, rel_5,
-                         rel_6, rel_7, rel_8, rel_9)
+rel_scores <- abs(round(faux::rnorm_multi(n = n,
+                          mu = c(3.5, 4, 0.5, 0.5, 3.5, 3.5, 3.5, 0.5, 0.5),
+                          sd = 1,
+                          r = 0.25,
+                          varnames = rel_varnames,
+                          empirical = FALSE),0))
 
 ## cultural norms ----
 

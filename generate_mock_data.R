@@ -20,7 +20,7 @@ wb_scores <- matrix(NA, nrow = n, ncol = length(wb_varnames))
 #  
 #}
 
-wb_scores <- round(faux::rnorm_multi(n = n, mu = 2.5, sd = 1, r = .25, varnames = wb_varnames),0)
+wb_scores <- round(rnorm_multi(n = n, mu = 2.5, sd = 1, r = .25, varnames = wb_varnames),0)
 
 colnames(wb_scores) <- wb_varnames
 wb_scores <- data.frame(wb_scores)
@@ -47,12 +47,15 @@ wb_scores <- data.frame(wb_scores)
 
 rel_varnames <- c(paste0("rel_", 1:9))
 
-rel_scores <- abs(round(faux::rnorm_multi(n = n,
+rel_scores <- abs(round(rnorm_multi(n = n,
                           mu = c(3.5, 4, 0.5, 0.5, 3.5, 3.5, 3.5, 0.5, 0.5),
                           sd = 1,
                           r = 0.25,
                           varnames = rel_varnames,
                           empirical = FALSE),0))
+
+# change range of rel_scores to max of 7, so I can estimate polychoric FA
+rel_scores[rel_scores == 8] <- 7
 
 ## cultural norms ----
 

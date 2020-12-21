@@ -20,6 +20,7 @@ wb_scores <- matrix(NA, nrow = n, ncol = length(wb_varnames))
 #  
 #}
 
+set.seed(017889)
 wb_scores <- round(rnorm_multi(n = n, mu = 2.5, sd = 1, r = .25, varnames = wb_varnames),0)
 
 colnames(wb_scores) <- wb_varnames

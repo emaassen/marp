@@ -17,30 +17,49 @@ library(tidyverse) # for data wrangling
 dat_raw <- source("generate_mock_data.R")[[1]]
 View(dat)
 
-### Clean data
+### Clean data 
 
 # only include data when participants passed the attention check
 dat <- dat_raw[dat_raw$attention_check == 1, ]
 
-### Factor analysis - wellbeing
-
 # center wellbeing items
+wb_items <- dat %>%
+  dplyr::select(starts_with("wb"))
 
+wb_items_centered <- apply(wb_items, 2, function(x) x - mean(x, na.rm = TRUE))
+colnames(wb_items_centered) <- paste0(colnames(wb_items), "_cent")
 
-
-### Factor analysis - religiosity
-
-# dichotomize rel_3 
+# dichotomize rel_3 item
 dat$rel_3[dat$rel_3 != 1] <- 0
 
 # center religiosity items
+rel_items <- dat %>%
+  dplyr::select(starts_with("rel"))
+
+rel_items_centered <- apply(rel_items, 2, function(x) x - mean(x, na.rm = TRUE))
+colnames(rel_items_centered) <- paste0(colnames(rel_items), "_cent")
+
+# center cultural norms items
+cnorm_items <- dat %>%
+  dplyr::select(starts_with("cnorm"))
+
+cnorm_items_centered <- apply(cnorm_items, 2, function(x) x - mean(x, na.rm = TRUE))
+colnames(cnorm_items_centered) <- paste0(colnames(cnorm_items), "_cent")
+
+# center control variables ses and education
+ses_cent <- dat$ses - mean(dat$ses, na.rm = TRUE)
+edu_cent <- dat$edu - mean(dat$edu, na.rm = TRUE)
+
+### Factor analysis - wellbeing
+
+
+### Factor analysis - religiosity
 
 
 ### Construct cultural norms variable
 
 # calculate average
-
-# center cultural norms items
+cnorm_mean <- rowMeans(cnorm_items_centered, na.rm = TRUE)
 
 
 ### Specify and estimate models

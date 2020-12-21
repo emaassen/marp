@@ -11,51 +11,71 @@ library(sjPlot) # to check assumptions of the model
 library(glmmTMB) # we need this package for the sjPlot package
 library(lattice) # check if still needed
 library(mlmRev) # check if still needed
+library(tidyverse) # for data wrangling
 
 ### Load data
 dat_raw <- source("generate_mock_data.R")[[1]]
 View(dat)
 
-### Clean data
+### Clean data 
 
 # only include data when participants passed the attention check
 dat <- dat_raw[dat_raw$attention_check == 1, ]
 
-### Factor analysis - wellbeing
-
 # center wellbeing items
+wb_items <- dat %>%
+  dplyr::select(starts_with("wb"))
 
+wb_items_centered <- apply(wb_items, 2, function(x) x - mean(x, na.rm = TRUE))
+colnames(wb_items_centered) <- paste0(colnames(wb_items), "_cent")
 
-
-### Factor analysis - religiosity
-
-# dichotomize rel_3 
+# dichotomize rel_3 item
 dat$rel_3[dat$rel_3 != 1] <- 0
 
 # center religiosity items
+rel_items <- dat %>%
+  dplyr::select(starts_with("rel"))
+
+rel_items_centered <- apply(rel_items, 2, function(x) x - mean(x, na.rm = TRUE))
+colnames(rel_items_centered) <- paste0(colnames(rel_items), "_cent")
+
+# center cultural norms items
+cnorm_items <- dat %>%
+  dplyr::select(starts_with("cnorm"))
+
+cnorm_items_centered <- apply(cnorm_items, 2, function(x) x - mean(x, na.rm = TRUE))
+colnames(cnorm_items_centered) <- paste0(colnames(cnorm_items), "_cent")
+
+# center control variables ses and education
+ses_cent <- dat$ses - mean(dat$ses, na.rm = TRUE)
+edu_cent <- dat$edu - mean(dat$edu, na.rm = TRUE)
+
+### Factor analysis - wellbeing
+
+
+### Factor analysis - religiosity
 
 
 ### Construct cultural norms variable
 
 # calculate average
-
-# center cultural norms items
+cnorm_mean <- rowMeans(cnorm_items_centered, na.rm = TRUE)
 
 
 ### Specify and estimate models
 
 # Null model
-mod0 <- lmer(normexam ~ 1 + (1 | school), data=Exam)
-mod0 <- lmer(wellbeing ~ 1 + (1 | country), REML=TRUE, data=dat) 
+mod0 <- lme4::lmer(normexam ~ 1 + (1 | school), data=Exam)
+mod0 <- lme4::lmer(wellbeing ~ 1 + (1 | country), REML=TRUE, data=dat) 
 
 
 ### 1st random intercept model (RQ1, without interaction)
-mod1 <- lmer(normexam ~ standLRT + (1 | school), data=Exam)
-mod1 <- lmer(wellbeing ~ religosity + ses + edu + (1 | country), REML=TRUE, data=dat)
+mod1 <- lme4::lmer(normexam ~ standLRT + (1 | school), data=Exam)
+mod1 <- lme4::lmer(wellbeing ~ religosity + ses + edu + (1 | country), REML=TRUE, data=dat)
 
 
 ### 2nd random intercept model (RQ2, with interaction)
-mod2 <- lmer(wellbeing ~ religosity + cultural + religiosity*cultural + ses + edu + (1 | country), REML=TRUE, data=dat)
+mod2 <- lme4::lmer(wellbeing ~ religosity + cultural + religiosity*cultural + ses + edu + (1 | country), REML=TRUE, data=dat)
 
 
 ### Assumptions check
@@ -64,29 +84,29 @@ mod2 <- lmer(wellbeing ~ religosity + cultural + religiosity*cultural + ses + ed
 # Dots should be plotted along the line
 
 # model 0
-qqmath(mod0)
-plot_model(mod0, type = 'diag')[[1]]
+lattice::qqmath(mod0)
+sjPlot::plot_model(mod0, type = 'diag')[[1]]
 
 # model 1
 qqmath(mod1)
-plot_model(mod1, type = 'diag')[[1]]
+sjPlot::plot_model(mod1, type = 'diag')[[1]]
 
 # model 2
 qqmath(mod2)
-plot_model(mod1, type = 'diag')[[1]]
+sjPlot::plot_model(mod1, type = 'diag')[[1]]
 
 
 # Normality of random effects 
 # Dots should be plotted along the line
 
 # model 0
-plot_model(mod0, type = 'diag')[[2]]
+sjPlot::plot_model(mod0, type = 'diag')[[2]]
 
 # model 1
-plot_model(mod1, type = 'diag')[[2]]
+sjPlot::plot_model(mod1, type = 'diag')[[2]]
 
 # model 2
-plot_model(mod2, type = 'diag')[[2]]
+sjPlot::plot_model(mod2, type = 'diag')[[2]]
 
 
 # Homoscedasticity 
@@ -94,13 +114,13 @@ plot_model(mod2, type = 'diag')[[2]]
 # Amount and distance of points scattered above/below line should be equal or randomly spread
 
 # model 0
-plot_model(mod0, type = 'diag')[[4]]
+sjPlot::plot_model(mod0, type = 'diag')[[4]]
 
 # model 1
-plot_model(mod1, type = 'diag')[[4]]
+sjPlot::plot_model(mod1, type = 'diag')[[4]]
 
 # model 2
-plot_model(mod2, type = 'diag')[[4]]
+sjPlot::plot_model(mod2, type = 'diag')[[4]]
 
 
 # Linearity
@@ -136,7 +156,7 @@ plot(resid(mod1),Exam$standLRT)
 plot(ranef(mod1),Exam$standLRT)
 cor(unlist(ranef(mod1)$school),as.numeric(Exam$standLRT))
 
-VarCorr(mod1)
+lme4::VarCorr(mod1)
 
 
 ### Extract results

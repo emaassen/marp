@@ -4,6 +4,8 @@
 # Clean workspace
 rm(list=ls()) 
 
+# Turn off scientific notation
+options(scipen=999)
 
 ### Load packages
 library(faux) # to generate the mock data
@@ -15,6 +17,7 @@ library(tidyverse) # for data wrangling
 library(lavaan) # for factor analysis 
 library(psych) # for factor scores
 library(GPArotation) # for polychoric EFA
+library(lmerTest) # to calculate pvalues for the final coefficients
 
 ### Load data
 dat_raw <- read.csv("../MARP_data.csv", sep = ",", header = TRUE)
@@ -265,5 +268,59 @@ plot(ranef(mod2),dat_final$ses_cent)
 plot(ranef(mod2),dat_final$edu_cent)
 
 ### Extract results
+
+# For hypothesis a, we will look at whether coefficient beta-1 is significantly greater than zero, for hypothesis b, we will look at whether coefficient beta-3 is significantly greater than zero. Both tests are one-tailed. We will correct for multiple testing with a Bonferroni correction: we will divide our significance level (alpha = .05) by the number of tests (2), so that our final significance level is .025.
+
+# function to standardize model coefficients
+# from: https://stackoverflow.com/questions/25142901/standardized-coefficients-for-lmer-model
+stdCoef.merMod <- function(object) {
+  sdy <- sd(getME(object,"y"))
+  sdx <- apply(getME(object,"X"), 2, sd)
+  sc <- fixef(object)*sdx/sdy
+  se.fixef <- coef(summary(object))[,"Std. Error"]
+  se <- se.fixef*sdx/sdy
+  return(data.frame(stdcoef=sc, stdse=se))
+}
+
+# HYPOTHESIS A
+# Extract beta_1 (religiosity) from model 1
+# refit model using the package lmerTest to also estimate p-values
+mod1_pvals <- lmerTest::lmer(wellbeing ~ relig + ses_cent + edu_cent + (1 | country), REML=FALSE, data=dat_final)
+
+# model results
+coefs_mod1 <- coef(summary(mod1_pvals))
+# standardized coefficients
+stdcoefs_mod1 <- stdCoef.merMod(mod1_pvals)
+
+# report result
+b1_mod1 <- round(stdcoefs_mod1["relig", "stdcoef"], 3)
+pval_b1 <- round(coefs_mod1["relig", "Pr(>|t|)"], 3)
+
+ci_low_b1 <- round(b1_mod1 - 1.96*stdcoefs_mod1["relig", "stdse"], 3)
+ci_up_b1 <- round(b1_mod1 + 1.96*stdcoefs_mod1["relig", "stdse"], 3)
+
+paste("b1 =", b1_mod1, "CI = [", ci_low_b1, ";", ci_up_b1, "], p =", pval_b1)
+# b1 = 0.057 CI = [ 0.039 ; 0.075 ], p = 0
+
+# HYPOTHESIS B
+# Extract beta_3 (religiosity*cultural_norms) from model 3
+# refit model using the package lmerTest to also estimate p-values
+mod2_pvals <- lmerTest::lmer(wellbeing ~ relig + cnorm_mean + relig*cnorm_mean + ses_cent + edu_cent + (1 | country), REML=FALSE, data=dat_final)
+
+# model results
+coefs_mod2 <- coef(summary(mod2_pvals))
+# standardized coefficients
+stdcoefs_mod2 <- stdCoef.merMod(mod2_pvals)
+
+# report result
+b3_mod2 <- round(stdcoefs_mod2["relig:cnorm_mean", "stdcoef"], 3)
+pval_b3 <- round(coefs_mod2["relig:cnorm_mean", "Pr(>|t|)"], 3)
+
+ci_low_b3 <- round(b3_mod2 - 1.96*stdcoefs_mod2["relig:cnorm_mean", "stdse"], 3)
+ci_up_b3 <- round(b3_mod2 + 1.96*stdcoefs_mod2["relig:cnorm_mean", "stdse"], 3)
+
+paste("b3 =", b3_mod2, "CI = [", ci_low_b3, ";", ci_up_b3, "], p =", pval_b3)
+# b3 = 0.036 CI = [ 0.018 ; 0.054 ], p = 0
+
 
 

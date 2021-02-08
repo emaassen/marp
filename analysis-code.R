@@ -1,6 +1,8 @@
 # This is the final analysis code for the Many Analysts Religion Project 
 # Team 041: E. Maassen & M.B. Nuijten
 
+### SET-UP ---------------------------------------------------------------------
+
 # Clean workspace
 rm(list=ls()) 
 
@@ -19,6 +21,8 @@ library(psych) # for factor scores
 library(GPArotation) # for polychoric EFA
 library(lmerTest) # to calculate pvalues for the final coefficients
 
+### LOAD DATA ------------------------------------------------------------------
+
 ### Load data
 dat_raw <- read.csv("../MARP_data.csv", sep = ",", header = TRUE)
 
@@ -26,7 +30,7 @@ dat_raw <- read.csv("../MARP_data.csv", sep = ",", header = TRUE)
 head(dat_raw)
 nrow(dat_raw)
 
-### Clean data 
+### CLEAN DATA ----------------------------------------------------------------- 
 
 # only include data when participants passed the attention check
 dat <- dat_raw[dat_raw$attention_check == 1, ]
@@ -75,7 +79,8 @@ edu_cent <- dat$edu - mean(dat$edu, na.rm = TRUE)
 summary(ses_cent)
 summary(edu_cent)
 
-### Factor analysis - wellbeing
+### FACTOR ANALYSIS WELL-BEING -------------------------------------------------
+
 # define model
 wb_model <- '# First order factors
              wb_gen =~ wb_gen_1_cent + wb_gen_2_cent
@@ -103,7 +108,7 @@ fitmeasures(wb_res)["srmr"] # we want the srmr to be < 0.08
 wellbeing_cent <- dat$wb_overall_mean-mean(dat$wb_overall_mean)
 
 
-### Factor analysis - religiosity
+### FACTOR ANALYSIS RELIGIOSITY ------------------------------------------------
 
 # Polychoric factor analysis with one factor
 poly_model = fa(rel_items_centered, nfactor=1, cor="poly", fm="mle", rotate = "none")
@@ -153,18 +158,20 @@ rel_scores <- factor.scores(rel_items_cent_subset, poly_model, method="Bartlett"
 
 relig <- rel_scores$scores
 
-### Construct cultural norms variable
+### CONSTRUCT CULTURAL NORMS VARIABLE ------------------------------------------
 
 # calculate average
 cnorm_mean <- rowMeans(cnorm_items_centered, na.rm = TRUE)
 
-### Combine all relevant variables into one dataframe
+### CREATE/SELECT FINAL DATA SET -----------------------------------------------
+
+# Combine all relevant variables into one dataframe
 dat_final <- data.frame(wellbeing_cent, relig, cnorm_mean, ses_cent, 
                                  edu_cent, country = dat$country)
 colnames(dat_final) <- c("wellbeing", "relig", "cnorm_mean", "ses_cent", 
                          "edu_cent", "country")
 
-### Specify and estimate models
+### SPECIFY AND ESTIMATE MULTILEVEL MODELS FOR HYPOTHESES A AND B --------------
 
 # Null model
 
@@ -177,7 +184,7 @@ mod1 <- lmer(wellbeing ~ relig + ses_cent + edu_cent + (1 | country), REML=FALSE
 mod2 <- lmer(wellbeing ~ relig + cnorm_mean + relig*cnorm_mean + ses_cent + edu_cent + (1 | country), REML=FALSE, data=dat_final)
 
 
-### Assumptions check
+### CHECK MODEL ASSUMPTIONS ----------------------------------------------------
 
 # Normality of residuals 
 # Dots should be plotted along the line
@@ -267,7 +274,7 @@ plot(ranef(mod2),dat_final$cnorms_mean)
 plot(ranef(mod2),dat_final$ses_cent)
 plot(ranef(mod2),dat_final$edu_cent)
 
-### Extract results
+### EXTRACT FINAL RESULTS ------------------------------------------------------
 
 # For hypothesis a, we will look at whether coefficient beta-1 is significantly greater than zero, for hypothesis b, we will look at whether coefficient beta-3 is significantly greater than zero. Both tests are one-tailed. We will correct for multiple testing with a Bonferroni correction: we will divide our significance level (alpha = .05) by the number of tests (2), so that our final significance level is .025.
 

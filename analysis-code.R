@@ -20,6 +20,8 @@ library(lavaan) # for factor analysis
 library(psych) # for factor scores
 library(GPArotation) # for polychoric EFA
 library(lmerTest) # to calculate pvalues for the final coefficients
+library(nlme) # to estimate null model
+
 
 ### LOAD DATA ------------------------------------------------------------------
 
@@ -167,15 +169,20 @@ cnorm_mean <- rowMeans(cnorm_items_centered, na.rm = TRUE)
 
 # Combine all relevant variables into one dataframe
 dat_final <- data.frame(wellbeing_cent, relig, cnorm_mean, ses_cent, 
-                                 edu_cent, country = dat$country)
+                        edu_cent, country = dat$country)
 colnames(dat_final) <- c("wellbeing", "relig", "cnorm_mean", "ses_cent", 
                          "edu_cent", "country")
 
 ### SPECIFY AND ESTIMATE MULTILEVEL MODELS FOR HYPOTHESES A AND B --------------
 
 # Null model
+# we first test a model without a random effect for country. We need a different specification
+# of the model to compare the null models, and we used another package than in our preregistration to do so
+mod.null <- nlme::gls(wellbeing ~ 1, data=dat_final) 
+mod.nullr <- nlme::lme(wellbeing ~ 1, random=~1|country, data=dat_final,method="REML")
 
-mod0 <- lmer(wellbeing ~ 1 + (1 | country), REML=TRUE, data=dat_final) 
+# compare fit of both models
+anova(mod.null,mod.nullr)
 
 ### 1st random intercept model (RQ1, without interaction)
 mod1 <- lmer(wellbeing ~ relig + ses_cent + edu_cent + (1 | country), REML=FALSE, data=dat_final)
@@ -328,6 +335,3 @@ ci_up_b3 <- round(b3_mod2 + 1.96*stdcoefs_mod2["relig:cnorm_mean", "stdse"], 3)
 
 paste("b3 =", b3_mod2, "CI = [", ci_low_b3, ";", ci_up_b3, "], p =", pval_b3)
 # b3 = 0.036 CI = [ 0.018 ; 0.054 ], p = 0
-
-
-
